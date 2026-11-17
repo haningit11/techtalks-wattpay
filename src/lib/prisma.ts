@@ -1,0 +1,3 @@
+// Prisma client placeholder.
+
+export {};

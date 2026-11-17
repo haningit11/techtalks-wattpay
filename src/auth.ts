@@ -1,0 +1,3 @@
+// Authentication configuration placeholder.
+
+export {};

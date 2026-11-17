@@ -1,0 +1,3 @@
+// Authentication test placeholder.
+
+export {};
