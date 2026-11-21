@@ -8,7 +8,28 @@ import {
   SESSION_MAX_AGE_SECONDS,
   type StoredAuthUser,
 } from "@/src/server/auth/credentials";
+import {
+  evaluateProtectedProxyRequest,
+  NO_STORE_CACHE_CONTROL,
+} from "@/src/server/auth/proxy";
+import { logoutAction } from "@/src/server/auth/actions";
 import { getRoleHomePage } from "@/src/server/auth/routes";
+
+const { mockSignOut } = vi.hoisted(() => ({
+  mockSignOut: vi.fn(async () => undefined),
+}));
+
+vi.mock("next-auth", () => ({
+  AuthError: class MockAuthError extends Error {
+    type = "Configuration";
+  },
+  CredentialsSignin: class MockCredentialsSignin extends Error {},
+}));
+
+vi.mock("@/src/auth", () => ({
+  signIn: vi.fn(),
+  signOut: mockSignOut,
+}));
 
 const TEST_PASSWORD = "WattPayTestPassword!2026";
 const TEST_HASH = bcrypt.hashSync(TEST_PASSWORD, 4);
@@ -181,5 +202,43 @@ describe("Authentication logic (TDD T-07 to T-10, T-16, T-17)", () => {
     });
 
     expect(tokenFromExpiredCookie).toBeNull();
+  });
+});
+
+describe("Sign-out and cache-control behavior (SCRUM-39, TDD API-02 / T-12)", () => {
+  it("T-12: redirects signed-out requests on protected areas to /login with no-store headers", async () => {
+    const protectedPaths = ["/admin", "/reader", "/collector", "/portal"];
+
+    for (const pathname of protectedPaths) {
+      const decision = await evaluateProtectedProxyRequest(`http://localhost:3000${pathname}`, {
+        getSessionUser: async () => null,
+      });
+
+      expect(decision).toEqual({
+        action: "redirect",
+        location: "http://localhost:3000/login",
+        cacheControl: NO_STORE_CACHE_CONTROL,
+      });
+    }
+  });
+
+  it("sets strict no-store cache headers on authenticated protected requests", async () => {
+    const decision = await evaluateProtectedProxyRequest("http://localhost:3000/collector", {
+      getSessionUser: async () => ({ id: "user-collector" }),
+    });
+
+    expect(decision).toEqual({
+      action: "next",
+      cacheControl: NO_STORE_CACHE_CONTROL,
+    });
+  });
+
+  it("logoutAction delegates to Auth.js signOut and redirects to /login", async () => {
+    mockSignOut.mockClear();
+
+    await logoutAction();
+
+    expect(mockSignOut).toHaveBeenCalledTimes(1);
+    expect(mockSignOut).toHaveBeenCalledWith({ redirectTo: "/login" });
   });
 });

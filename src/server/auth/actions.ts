@@ -1,7 +1,7 @@
 "use server";
 
 import { AuthError, CredentialsSignin } from "next-auth";
-import { signIn } from "@/src/auth";
+import { signIn, signOut } from "@/src/auth";
 import { loginSchema } from "@/src/server/auth/credentials";
 
 export interface LoginActionState {
@@ -77,4 +77,12 @@ export async function loginAction(
     // Re-throw Next.js internal redirect signal when signIn succeeds.
     throw error;
   }
+}
+
+/**
+ * Server Action that signs out the current user via Auth.js, clears the session
+ * cookie, and redirects to `/login` (safe even when no session exists — TDD API-02).
+ */
+export async function logoutAction(): Promise<void> {
+  await signOut({ redirectTo: "/login" });
 }
