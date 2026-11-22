@@ -1,3 +1,3 @@
-export async function GET(): Promise<Response> {
-  return new Response("Not implemented", { status: 501 });
-}
+import { handlers } from "@/src/auth";
+
+export const { GET, POST } = handlers;
