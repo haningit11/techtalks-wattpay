@@ -1,8 +1,8 @@
 "use server";
 
 import { AuthError, CredentialsSignin } from "next-auth";
-import { signIn, signOut } from "@/src/auth";
-import { loginSchema } from "@/src/server/auth/credentials";
+import { signIn, signOut } from "@/auth";
+import { loginSchema } from "@/server/auth/credentials";
 
 export interface LoginActionState {
   error?: string;

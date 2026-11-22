@@ -1,10 +1,10 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import { UserRole } from "@/src/generated/prisma/enums";
+import { UserRole } from "@/generated/prisma/enums";
 import {
   authorizeCredentials,
   SESSION_MAX_AGE_SECONDS,
-} from "@/src/server/auth/credentials";
+} from "@/server/auth/credentials";
 
 const VALID_ROLES = new Set<string>(Object.values(UserRole));
 

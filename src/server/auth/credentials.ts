@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import { z } from "zod";
-import type { UserRole } from "@/src/generated/prisma/enums";
+import type { UserRole } from "@/generated/prisma/enums";
 
 /** 8-hour session lifetime specified in TDD Section 6.3. */
 export const SESSION_MAX_AGE_SECONDS = 8 * 60 * 60;
@@ -49,7 +49,7 @@ export interface CredentialAuthDependencies {
 }
 
 async function defaultFindUserByEmail(email: string): Promise<StoredAuthUser | null> {
-  const { prisma } = await import("@/src/lib/prisma");
+  const { prisma } = await import("@/lib/prisma");
   return prisma.user.findUnique({
     where: { email },
     select: {
