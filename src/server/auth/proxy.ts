@@ -7,8 +7,9 @@ export interface ProxySessionDeps {
 }
 
 async function defaultGetSessionUser(): Promise<{ id: string } | null> {
-  const { auth } = await import("@/src/auth");
+  const { auth } = await import("@/auth");
   const session = await auth();
+
   return session?.user ?? null;
 }
 

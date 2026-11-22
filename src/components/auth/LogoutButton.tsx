@@ -1,7 +1,7 @@
 "use client";
 
 import { useFormStatus } from "react-dom";
-import { logoutAction } from "@/src/server/auth/actions";
+import { logoutAction } from "@/server/auth/actions";
 
 interface LogoutButtonProps {
   className?: string;

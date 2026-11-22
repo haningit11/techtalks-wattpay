@@ -12,7 +12,7 @@ import {
   evaluateProtectedProxyRequest,
   NO_STORE_CACHE_CONTROL,
 } from "@/src/server/auth/proxy";
-import { logoutAction } from "@/src/server/auth/actions";
+import { logoutAction } from "@/server/auth/actions";
 import { getRoleHomePage } from "@/src/server/auth/routes";
 
 const { mockSignOut } = vi.hoisted(() => ({
