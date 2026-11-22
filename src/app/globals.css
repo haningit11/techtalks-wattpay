@@ -1,26 +1,1023 @@
+
 @import "tailwindcss";
 
+/* =========================================================
+   WATTPAY — GLOBAL DESIGN SYSTEM
+   Theme: Professional Fintech / Electricity Management
+   ========================================================= */
+
+
+/* =========================================================
+   1. DESIGN TOKENS
+   ========================================================= */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light;
+
+  /* BRAND COLORS */
+  --color-primary: #142d4e;
+  --color-primary-light: #1e416b;
+  --color-primary-dark: #0d2038;
+
+  --color-blue: #2563eb;
+  --color-blue-hover: #1d4ed8;
+  --color-blue-light: #eff6ff;
+
+  --color-teal: #0d9488;
+  --color-teal-hover: #0f766e;
+  --color-teal-light: #f0fdfa;
+
+  /* NEUTRAL COLORS */
+  --color-background: #f8fafc;
+  --color-surface: #ffffff;
+  --color-surface-secondary: #f1f5f9;
+  --color-surface-hover: #f8fafc;
+
+  --color-border: #e2e8f0;
+  --color-border-strong: #cbd5e1;
+
+  --color-text: #0f172a;
+  --color-text-body: #334155;
+  --color-text-secondary: #64748b;
+  --color-text-muted: #94a3b8;
+  --color-text-inverse: #ffffff;
+
+  /* STATUS COLORS */
+  --color-success: #15803d;
+  --color-success-bg: #dcfce7;
+  --color-success-border: #86efac;
+
+  --color-warning: #b45309;
+  --color-warning-bg: #fef3c7;
+  --color-warning-border: #fcd34d;
+
+  --color-danger: #dc2626;
+  --color-danger-bg: #fee2e2;
+  --color-danger-border: #fca5a5;
+
+  --color-info: #2563eb;
+  --color-info-bg: #dbeafe;
+  --color-info-border: #93c5fd;
+
+  /* SPECIAL READING ALERT */
+  --color-orange: #c2410c;
+  --color-orange-bg: #ffedd5;
+  --color-orange-border: #fdba74;
+
+  --color-purple: #7e22ce;
+  --color-purple-bg: #f3e8ff;
+  --color-purple-border: #d8b4fe;
+
+  /* TYPOGRAPHY */
+  --font-sans: var(--font-geist-sans), Arial, sans-serif;
+  --font-mono: var(--font-geist-mono), monospace;
+  --font-brand: var(--font-outfit), sans-serif;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --text-4xl: 2.25rem;
+
+    /* FONT WEIGHTS */
+  --font-light: 300;
+  --font-regular: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+
+  --line-height-tight: 1.25;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.625;
+
+
+  /* SPACING */
+--spacing-1: 0.25rem;
+--spacing-2: 0.5rem;
+--spacing-3: 0.75rem;
+--spacing-4: 1rem;
+--spacing-5: 1.25rem;
+--spacing-6: 1.5rem;
+--spacing-7: 1.75rem;
+--spacing-8: 2rem;
+--spacing-9: 2.25rem;
+--spacing-10: 2.5rem;
+--spacing-11: 2.75rem;
+--spacing-12: 3rem;
+
+--spacing-page: 2rem;
+--spacing-section: 1.5rem;
+--spacing-card: 1.5rem;
+
+  /* BORDER RADIUS */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
+  --radius-full: 9999px;
+
+  /* SHADOWS */
+  --shadow-sm: 0 1px 2px rgb(15 23 42 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(15 23 42 / 0.08);
+  --shadow-lg: 0 10px 15px -3px rgb(15 23 42 / 0.08);
+  --shadow-xl: 0 20px 25px -5px rgb(15 23 42 / 0.08);
+
+  /* LAYOUT */
+  --sidebar-width: 260px;
+  --header-height: 72px;
+  --content-max-width: 1440px;
+
+  /* TRANSITIONS */
+  --transition-fast: 150ms ease;
+  --transition-normal: 200ms ease;
+  --transition-slow: 300ms ease;
 }
 
+
+/* =========================================================
+   2. TAILWIND THEME INTEGRATION
+   ========================================================= */
+
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: var(--color-background);
+  --color-foreground: var(--color-text);
+
+  --color-primary: var(--color-primary);
+  --color-primary-light: var(--color-primary-light);
+  --color-primary-dark: var(--color-primary-dark);
+
+  --color-blue: var(--color-blue);
+  --color-teal: var(--color-teal);
+
+  --color-surface: var(--color-surface);
+  --color-border: var(--color-border);
+
+  --color-success: var(--color-success);
+  --color-warning: var(--color-warning);
+  --color-danger: var(--color-danger);
+  --color-info: var(--color-info);
+
+  --color-orange: var(--color-orange);
+  --color-purple: var(--color-purple);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+
+/* =========================================================
+   3. GLOBAL RESET
+   ========================================================= */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  min-height: 100vh;
+  margin: 0;
+  font-weight: var(--font-regular);
+
+
+  background: var(--color-background);
+  color: var(--color-text-body);
+
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: var(--line-height-normal);
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  color: var(--color-blue);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--color-blue-hover);
+}
+
+
+/* =========================================================
+   4. TYPOGRAPHY
+   ========================================================= */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+  color: var(--color-text);
+  font-weight: var(--font-semibold);
+  line-height: var(--line-height-tight);
+}
+
+h1 {
+  font-size: var(--text-4xl);
+}
+
+h2 {
+  font-size: var(--text-3xl);
+}
+
+h3 {
+  font-size: var(--text-2xl);
+}
+
+h4 {
+  font-size: var(--text-xl);
+}
+
+p {
+  margin: 0;
+}
+
+.wp-text-muted {
+  color: var(--color-text-muted);
+}
+
+.wp-text-secondary {
+  color: var(--color-text-secondary);
+}
+
+.wp-text-body {
+  color: var(--color-text-body);
+}
+
+.wp-text-primary {
+  color: var(--color-primary);
+}
+
+.wp-text-success {
+  color: var(--color-success);
+}
+
+.wp-text-danger {
+  color: var(--color-danger);
+}
+
+.wp-text-small {
+  font-size: var(--text-sm);
+}
+
+.wp-text-xs {
+  font-size: var(--text-xs);
+}
+
+
+/* =========================================================
+   5. COMMON LAYOUT UTILITIES
+   ========================================================= */
+
+.wp-container {
+  width: 100%;
+  max-width: var(--content-max-width);
+  margin-inline: auto;
+  padding-inline: var(--spacing-page);
+}
+
+.wp-page {
+  min-height: 100vh;
+  background: var(--color-background);
+}
+
+.wp-section {
+  margin-bottom: var(--spacing-section);
+}
+
+.wp-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: var(--spacing-6);
+}
+
+.wp-page-title {
+  font-size: var(--text-3xl);
+  font-weight: var(--font-semibold);
+  color: var(--color-text);
+}
+
+.wp-page-description {
+  margin-top: var(--spacing-2);
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+}
+
+
+/* =========================================================
+   6. CARDS
+   ========================================================= */
+
+.wp-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+}
+
+.wp-card-header {
+  padding: var(--spacing-card);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.wp-card-body {
+  padding: var(--spacing-card);
+}
+
+.wp-card-footer {
+  padding: var(--spacing-card);
+  border-top: 1px solid var(--color-border);
+}
+
+.wp-card-interactive {
+  transition:
+    border-color var(--transition-normal),
+    box-shadow var(--transition-normal),
+    transform var(--transition-normal);
+}
+
+.wp-card-interactive:hover {
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-md);
+}
+
+.wp-card-selected {
+  border-color: var(--color-blue);
+  box-shadow: 0 0 0 2px rgb(37 99 235 / 0.12);
+}
+
+
+/* =========================================================
+   7. BUTTONS
+   ========================================================= */
+
+.wp-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+
+  min-height: 40px;
+  padding: 0.625rem 1rem;
+
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  line-height: 1.25;
+
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.wp-button:disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+.wp-button:focus-visible {
+  outline: 2px solid var(--color-blue);
+  outline-offset: 3px;
+}
+
+.wp-button-sm {
+  min-height: 32px;
+  padding: 0.375rem 0.75rem;
+  font-size: var(--text-xs);
+}
+
+.wp-button-lg {
+  min-height: 48px;
+  padding: 0.75rem 1.25rem;
+  font-size: var(--text-base);
+}
+
+.wp-button-primary {
+  background: var(--color-blue);
+  color: #ffffff;
+}
+
+.wp-button-primary:hover {
+  background: var(--color-blue-hover);
+}
+
+.wp-button-secondary {
+  background: var(--color-surface);
+  color: var(--color-text);
+  border-color: var(--color-border-strong);
+}
+
+.wp-button-secondary:hover {
+  background: var(--color-surface-secondary);
+}
+
+.wp-button-teal {
+  background: var(--color-teal);
+  color: #ffffff;
+}
+
+.wp-button-teal:hover {
+  background: var(--color-teal-hover);
+}
+
+.wp-button-danger {
+  background: var(--color-danger);
+  color: #ffffff;
+}
+
+.wp-button-danger:hover {
+  background: #b91c1c;
+}
+
+.wp-button-ghost {
+  background: transparent;
+  color: var(--color-text-secondary);
+}
+
+.wp-button-ghost:hover {
+  background: var(--color-surface-secondary);
+  color: var(--color-text);
+}
+
+
+/* =========================================================
+   8. FORM ELEMENTS
+   ========================================================= */
+
+.wp-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.wp-label {
+  display: block;
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+}
+
+.wp-input,
+.wp-select,
+.wp-textarea {
+  width: 100%;
+  min-height: 42px;
+  padding: 0.625rem 0.75rem;
+
+  background: var(--color-surface);
+  color: var(--color-text);
+
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  outline: none;
+
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    background var(--transition-fast);
+}
+
+.wp-input::placeholder,
+.wp-textarea::placeholder {
+  color: var(--color-text-muted);
+}
+
+.wp-input:focus,
+.wp-select:focus,
+.wp-textarea:focus {
+  border-color: var(--color-blue);
+  box-shadow: 0 0 0 3px rgb(37 99 235 / 0.12);
+}
+
+.wp-input:disabled,
+.wp-select:disabled,
+.wp-textarea:disabled {
+  background: var(--color-surface-secondary);
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+}
+
+.wp-textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+/* Form validation */
+
+.wp-input-error,
+.wp-select-error,
+.wp-textarea-error {
+  border-color: var(--color-danger);
+}
+
+.wp-input-error:focus,
+.wp-select-error:focus,
+.wp-textarea-error:focus {
+  border-color: var(--color-danger);
+  box-shadow: 0 0 0 3px rgb(220 38 38 / 0.12);
+}
+
+.wp-field-error {
+  color: var(--color-danger);
+  font-size: var(--text-xs);
+}
+
+.wp-field-hint {
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+}
+
+/* =========================================================
+   8.1. REUSABLE INPUT COMPONENT
+   ========================================================= */
+
+.wp-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  width: 100%;
+}
+
+/* Input wrapper */
+
+.wp-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 42px;
+
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.wp-input-wrapper:focus-within {
+  border-color: var(--color-blue);
+  box-shadow: 0 0 0 3px rgb(37 99 235 / 0.12);
+}
+
+/* Input inside wrapper */
+
+/* Input inside wrapper */
+.wp-input-wrapper .wp-input,
+.wp-input-wrapper .wp-input:focus {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  box-shadow: none;
+  background: transparent;
+}
+
+/* Wrapper controls the focus appearance */
+.wp-input-wrapper:focus-within {
+  border-color: var(--color-blue);
+  box-shadow: 0 0 0 3px rgb(37 99 235 / 0.12);
+}
+
+/* Input icons */
+
+.wp-input-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+}
+
+.wp-input-icon-left {
+  padding-left: 0.875rem;
+}
+
+.wp-input-icon-right {
+  padding-right: 0.875rem;
+}
+
+/* Error state */
+
+.wp-input-wrapper-error {
+  border-color: var(--color-danger);
+}
+
+.wp-input-wrapper-error:focus-within {
+  border-color: var(--color-danger);
+  box-shadow: 0 0 0 3px rgb(220 38 38 / 0.12);
+}
+
+/* Disabled state */
+
+.wp-input-wrapper-disabled {
+  background: var(--color-surface-secondary);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.wp-input-wrapper-disabled .wp-input {
+  cursor: not-allowed;
+}
+
+/* Required indicator */
+
+.wp-input-required {
+  margin-left: 0.25rem;
+  color: var(--color-danger);
+}
+
+/* Input messages */
+
+.wp-input-error-message {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  color: var(--color-danger);
+  font-size: var(--text-xs);
+}
+
+.wp-input-helper {
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+}
+
+
+/* =========================================================
+   9. SEARCH INPUT
+   ========================================================= */
+
+.wp-search {
+  position: relative;
+  width: 100%;
+}
+
+.wp-search-icon {
+  position: absolute;
+  top: 50%;
+  left: 0.875rem;
+  transform: translateY(-50%);
+  color: var(--color-text-muted);
+  pointer-events: none;
+}
+
+.wp-search .wp-input {
+  padding-left: 2.75rem;
+}
+
+
+/* =========================================================
+   10. STATUS BADGES
+   ========================================================= */
+
+.wp-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+
+  padding: 0.25rem 0.625rem;
+
+  border-radius: var(--radius-full);
+
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  line-height: 1.4;
+}
+
+.wp-badge-success {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.wp-badge-warning {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+
+.wp-badge-danger {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+}
+
+.wp-badge-info {
+  background: var(--color-info-bg);
+  color: var(--color-info);
+}
+
+.wp-badge-orange {
+  background: var(--color-orange-bg);
+  color: var(--color-orange);
+}
+
+.wp-badge-purple {
+  background: var(--color-purple-bg);
+  color: var(--color-purple);
+}
+
+
+/* =========================================================
+   11. ALERTS
+   ========================================================= */
+
+.wp-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
+
+  width: 100%;
+  padding: 1rem;
+
+  border: 1px solid;
+  border-radius: var(--radius-lg);
+}
+
+.wp-alert-icon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+}
+
+.wp-alert-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.wp-alert-title {
+  margin-bottom: 0.25rem;
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+}
+
+.wp-alert-description {
+  font-size: var(--text-sm);
+  line-height: var(--line-height-relaxed);
+}
+
+.wp-alert-success {
+  background: var(--color-success-bg);
+  border-color: var(--color-success-border);
+  color: var(--color-success);
+}
+
+.wp-alert-warning {
+  background: var(--color-warning-bg);
+  border-color: var(--color-warning-border);
+  color: var(--color-warning);
+}
+
+.wp-alert-danger {
+  background: var(--color-danger-bg);
+  border-color: var(--color-danger-border);
+  color: var(--color-danger);
+}
+
+.wp-alert-info {
+  background: var(--color-info-bg);
+  border-color: var(--color-info-border);
+  color: var(--color-info);
+}
+
+.wp-alert-orange {
+  background: var(--color-orange-bg);
+  border-color: var(--color-orange-border);
+  color: var(--color-orange);
+}
+
+.wp-alert-purple {
+  background: var(--color-purple-bg);
+  border-color: var(--color-purple-border);
+  color: var(--color-purple);
+}
+
+
+/* =========================================================
+   12. TABLES
+   ========================================================= */
+
+.wp-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.wp-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.wp-table th {
+  padding: 0.875rem 1rem;
+
+  background: var(--color-surface-secondary);
+  color: var(--color-text-secondary);
+
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.wp-table td {
+  padding: 1rem;
+
+  color: var(--color-text-body);
+  border-top: 1px solid var(--color-border);
+
+  font-size: var(--text-sm);
+}
+
+.wp-table tbody tr {
+  transition: background var(--transition-fast);
+}
+
+.wp-table tbody tr:hover {
+  background: var(--color-surface-hover);
+}
+
+.wp-table tbody tr.wp-table-row-selected {
+  background: var(--color-blue-light);
+}
+
+
+/* =========================================================
+   13. SIDEBAR
+   ========================================================= */
+
+.wp-sidebar {
+  width: var(--sidebar-width);
+  min-height: 100vh;
+
+  background: var(--color-primary);
+  color: #ffffff;
+}
+
+.wp-sidebar a {
+  color: rgb(255 255 255 / 0.8);
+}
+
+.wp-sidebar a:hover {
+  color: #ffffff;
+}
+
+
+/* =========================================================
+   14. DIVIDERS
+   ========================================================= */
+
+.wp-divider {
+  width: 100%;
+  height: 1px;
+  border: 0;
+  background: var(--color-border);
+}
+
+
+/* =========================================================
+   15. ACCESSIBILITY
+   ========================================================= */
+
+
+:focus-visible {
+  outline: 2px solid var(--color-blue);
+  outline-offset: 3px;
+}
+
+/* The input wrapper already provides its own focus indicator */
+.wp-input-wrapper .wp-input:focus-visible {
+  outline: none;
+}
+
+::selection {
+  background: rgb(37 99 235 / 0.15);
+  color: var(--color-text);
+}
+
+
+/* =========================================================
+   16. RESPONSIVE DESIGN
+   ========================================================= */
+
+/* Tablets and smaller screens */
+
+@media (max-width: 1024px) {
+  :root {
+    --spacing-page: 1.5rem;
+  }
+}
+
+/* Mobile screens */
+
+@media (max-width: 768px) {
+  :root {
+    --spacing-page: 1rem;
+    --spacing-card: 1rem;
+    --spacing-section: 1rem;
+  }
+
+  h1 {
+    font-size: var(--text-3xl);
+  }
+
+  h2 {
+    font-size: var(--text-2xl);
+  }
+
+  h3 {
+    font-size: var(--text-xl);
+  }
+
+  .wp-sidebar {
+    width: 100%;
+    min-height: auto;
+  }
+
+  .wp-page-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .wp-page-title {
+    font-size: var(--text-2xl);
+  }
+
+  .wp-button {
+    min-height: 44px;
+  }
+}
+
+/* Small mobile screens */
+
+@media (max-width: 480px) {
+  :root {
+    --spacing-page: 0.875rem;
+    --spacing-card: 0.875rem;
+  }
+
+  .wp-container {
+    padding-inline: var(--spacing-page);
+  }
+}
+
+
+/* =========================================================
+   17. REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

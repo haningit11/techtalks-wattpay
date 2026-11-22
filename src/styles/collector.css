@@ -1,0 +1,1248 @@
+
+/* =========================================================
+   WATTPAY — PAYMENT COLLECTOR WORKSPACE
+   Theme: Navy + Blue + Teal
+   Uses global design tokens from globals.css
+========================================================= */
+
+
+/* =========================================================
+   1. PAGE FOUNDATION
+========================================================= */
+
+.collector-page {
+  min-height: 100vh;
+  color: var(--color-text);
+
+  font-family: var(--font-sans);
+
+
+  background: var(--color-background);
+  font-family: var(--font-sans);
+}
+
+/* =========================================================
+   NAVBAR — SOLID NAVY
+========================================================= */
+
+.collector-page > header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
+
+  border-bottom: 1px solid var(--color-primary-light);
+  box-shadow: var(--shadow-md);
+
+  backdrop-filter: none;
+}
+
+/* Navbar text and icons */
+.collector-page > header h1,
+.collector-page > header h2,
+.collector-page > header h3,
+.collector-page > header p,
+.collector-page > header span,
+.collector-page > header a,
+.collector-page > header svg {
+  color: inherit;
+}
+
+/* Navbar links */
+.collector-page > header a {
+  text-decoration: none;
+  transition: opacity var(--transition-fast);
+}
+
+.collector-page > header a:hover {
+  opacity: 0.8;
+}
+
+/* Keep the online indicator readable */
+.collector-page > header .collector-online-indicator {
+  border-color: var(--color-success-border);
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.collector-page > header .collector-online-indicator__dot {
+  background: var(--color-success);
+}
+
+/* Navbar buttons */
+.collector-page > header button {
+  color: var(--color-text-inverse);
+}
+
+.collector-page > header button:focus-visible {
+  outline: 2px solid var(--color-teal);
+  outline-offset: 3px;
+}
+
+.collector-page main {
+  position: relative;
+}
+
+.collector-page main > section:first-child {
+  position: relative;
+}
+
+.collector-page main > section:first-child h2 {
+  letter-spacing: -0.04em;
+}
+
+.collector-page main > section:first-child p {
+  max-width: 620px;
+  line-height: var(--line-height-relaxed);
+}
+
+
+/* =========================================================
+   2. HEADER STATUS
+========================================================= */
+
+.collector-online-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-2) var(--spacing-3);
+  border: 1px solid var(--color-success-border);
+  border-radius: var(--radius-full);
+  background: var(--color-success-bg);
+  color: var(--color-success);
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+}
+
+.collector-online-indicator__dot {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  border-radius: var(--radius-full);
+  background: var(--color-success);
+  box-shadow: 0 0 0 3px color-mix(
+    in srgb,
+    var(--color-success) 14%,
+    transparent
+  );
+}
+
+
+/* =========================================================
+   3. SUMMARY CARDS
+========================================================= */
+
+.collector-stat-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-width: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+
+  transition:
+    transform var(--transition-normal),
+    border-color var(--transition-normal),
+    box-shadow var(--transition-normal);
+}
+
+.collector-stat-card::before {
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  right: 0;
+  width: 115px;
+  height: 115px;
+  border-radius: 0 0 0 100%;
+  background: var(--color-blue-light);
+  opacity: 0.65;
+  content: "";
+  pointer-events: none;
+}
+
+.collector-stat-card:nth-child(2)::before {
+  background: var(--color-teal-light);
+}
+
+.collector-stat-card:nth-child(3)::before {
+  background: var(--color-info-bg);
+}
+
+.collector-stat-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-lg);
+}
+
+.collector-stat-card > * {
+  position: relative;
+}
+
+.collector-stat-card .wp-card-body {
+  padding: var(--spacing-5);
+}
+
+.collector-stat-card p:first-child {
+  font-weight: var(--font-medium);
+}
+
+.collector-stat-card .collector-stat-icon {
+  transition:
+    transform var(--transition-normal),
+    box-shadow var(--transition-normal);
+}
+
+.collector-stat-card:hover .collector-stat-icon {
+  transform: translateY(-2px) scale(1.05);
+}
+
+.collector-stat-icon {
+  display: inline-flex;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: var(--radius-lg);
+}
+
+.collector-stat-icon--warning {
+  border-color: var(--color-warning-border);
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+
+.collector-stat-icon--success {
+  border-color: var(--color-success-border);
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.collector-stat-icon--info {
+  border-color: var(--color-info-border);
+  background: var(--color-info-bg);
+  color: var(--color-info);
+}
+
+
+/* =========================================================
+   4. CARD SURFACES
+========================================================= */
+
+.collector-page .wp-card {
+  border-color: var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  transition:
+    border-color var(--transition-normal),
+    box-shadow var(--transition-normal);
+}
+
+.collector-page .wp-card:hover {
+  border-color: color-mix(
+    in srgb,
+    var(--color-border-strong) 75%,
+    var(--color-blue)
+  );
+}
+
+.collector-page .wp-card-header {
+  border-color: var(--color-border);
+}
+
+.collector-page .wp-card-header h3 {
+  letter-spacing: -0.015em;
+}
+
+
+/* =========================================================
+   5. SEARCH AND FILTERS
+========================================================= */
+
+.collector-search {
+  width: 100%;
+}
+
+.collector-search .wp-input-wrapper {
+  min-height: 44px;
+  border-color: var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-secondary);
+}
+
+.collector-search .wp-input-wrapper:focus-within {
+  border-color: var(--color-blue);
+  background: var(--color-surface);
+}
+
+.collector-search .wp-input {
+  font-size: var(--text-sm);
+}
+
+.collector-search .wp-input-icon {
+  color: var(--color-text-muted);
+}
+
+.collector-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+}
+
+.collector-filter-row button {
+  border-radius: var(--radius-full);
+  transition:
+    transform var(--transition-fast),
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.collector-filter-row button:hover {
+  transform: translateY(-1px);
+}
+
+.collector-filter-row button:focus-visible {
+  outline: 2px solid var(--color-teal);
+  outline-offset: 3px;
+}
+
+
+/* =========================================================
+   6. SUBSCRIBER LIST
+========================================================= */
+
+.collector-subscriber-row {
+  position: relative;
+  display: flex;
+  width: 100%;
+  min-height: 88px;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-3);
+  padding: var(--spacing-4);
+
+  border: 1px solid transparent;
+  border-left: 3px solid transparent;
+  border-radius: var(--radius-lg);
+
+  background: var(--color-surface);
+  color: var(--color-text);
+  text-align: left;
+
+  transition:
+    background var(--transition-normal),
+    border-color var(--transition-normal),
+    transform var(--transition-normal),
+    box-shadow var(--transition-normal);
+}
+
+.collector-subscriber-row:hover {
+  transform: translateX(2px);
+  border-color: var(--color-border);
+  background: var(--color-surface-hover);
+  box-shadow: var(--shadow-sm);
+}
+
+.collector-subscriber-row--active {
+  border-color: color-mix(
+    in srgb,
+    var(--color-teal) 30%,
+    var(--color-border)
+  );
+  border-left-color: var(--color-teal);
+  background: var(--color-teal-light);
+  box-shadow: inset 0 0 0 1px color-mix(
+    in srgb,
+    var(--color-teal) 8%,
+    transparent
+  );
+}
+
+.collector-subscriber-row--active:hover {
+  background: color-mix(
+    in srgb,
+    var(--color-teal-light) 75%,
+    var(--color-surface)
+  );
+}
+
+.collector-subscriber-row:focus-visible,
+.collector-bill-row:focus-visible {
+  outline: 2px solid var(--color-blue);
+  outline-offset: 2px;
+}
+
+.collector-subscriber-row > div:last-child > p:first-child {
+  font-variant-numeric: tabular-nums;
+}
+
+.collector-subscriber-row > div:last-child {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--spacing-1);
+}
+
+
+/* =========================================================
+   7. SUBSCRIBER ACCOUNT BALANCE
+========================================================= */
+
+.collector-account-balance {
+  display: flex;
+  min-width: 155px;
+  flex-direction: column;
+  gap: var(--spacing-2);
+
+  border: 1px solid var(--color-teal-border, var(--color-border));
+  border-radius: var(--radius-lg);
+
+  background: var(--color-teal-light);
+  padding: var(--spacing-3) var(--spacing-4);
+}
+
+.collector-account-balance span {
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+}
+
+.collector-account-balance strong {
+  color: var(--color-teal);
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+
+/* =========================================================
+   8. BILL ROWS
+========================================================= */
+
+.collector-bill-row {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-3);
+
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+
+  background: var(--color-surface);
+  padding: var(--spacing-3);
+
+  color: var(--color-text);
+  text-align: left;
+
+  transition:
+    border-color var(--transition-normal),
+    background var(--transition-normal),
+    box-shadow var(--transition-normal),
+    transform var(--transition-normal);
+}
+
+.collector-bill-row:hover {
+  transform: translateY(-1px);
+  border-color: var(--color-teal);
+  background: var(--color-surface-hover);
+  box-shadow: var(--shadow-sm);
+}
+
+.collector-bill-row--active {
+  border-color: var(--color-teal);
+  background: var(--color-teal-light);
+  box-shadow: 0 0 0 2px color-mix(
+    in srgb,
+    var(--color-teal) 10%,
+    transparent
+  );
+}
+
+.collector-bill-row--active:hover {
+  background: var(--color-teal-light);
+}
+
+.collector-bill-icon {
+  display: inline-flex;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid var(--color-info-bg);
+  border-radius: var(--radius-lg);
+
+  background: var(--color-blue-light);
+  color: var(--color-blue);
+}
+
+.collector-bill-row--active .collector-bill-icon {
+  border-color: var(--color-success-border);
+  background: var(--color-success-bg);
+  color: var(--color-teal);
+}
+
+.collector-bill-row > div:last-child {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--spacing-1);
+}
+
+.collector-bill-row > div:last-child > p {
+  font-variant-numeric: tabular-nums;
+}
+
+
+/* =========================================================
+   9. PAYMENT SUMMARY
+========================================================= */
+
+.collector-payment-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-3);
+
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+
+  background: var(--color-surface-secondary);
+  padding: var(--spacing-4);
+}
+
+.collector-payment-summary > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+
+.collector-payment-summary span {
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+}
+
+.collector-payment-summary strong {
+  overflow-wrap: anywhere;
+  color: var(--color-text);
+  font-size: var(--text-base);
+  font-weight: var(--font-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+.collector-payment-summary__balance {
+  grid-column: 1 / -1;
+
+  border: 1px solid var(--color-success-border);
+  border-radius: var(--radius-lg);
+
+  background: var(--color-teal-light);
+  padding: var(--spacing-3);
+}
+
+.collector-payment-summary__balance span {
+  color: var(--color-teal);
+}
+
+.collector-payment-summary__balance strong {
+  color: var(--color-teal);
+  font-size: var(--text-2xl);
+  letter-spacing: -0.025em;
+}
+
+
+/* =========================================================
+   10. PAYMENT FORM
+========================================================= */
+
+.collector-page .wp-form-field {
+  gap: var(--spacing-2);
+}
+
+.collector-page .wp-label {
+  color: var(--color-text);
+  font-weight: var(--font-semibold);
+}
+
+.collector-page .wp-input-wrapper {
+  border-color: var(--color-border-strong);
+  border-radius: var(--radius-lg);
+}
+
+.collector-page .wp-input-wrapper:focus-within {
+  border-color: var(--color-blue);
+}
+
+.collector-page select.wp-input {
+  min-height: 44px;
+  border-color: var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.collector-page select.wp-input:focus {
+  border-color: var(--color-blue);
+  box-shadow: 0 0 0 3px color-mix(
+    in srgb,
+    var(--color-blue) 13%,
+    transparent
+  );
+}
+
+
+/* =========================================================
+   11. PAYMENT FEEDBACK
+========================================================= */
+
+.collector-page form > [role="alert"],
+.collector-page form > [role="status"] {
+  border-radius: var(--radius-lg);
+  line-height: var(--line-height-relaxed);
+}
+
+
+/* =========================================================
+   12. FULLY PAID STATE
+========================================================= */
+
+.collector-paid-state {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+
+  border: 1px solid var(--color-success-border);
+  border-radius: var(--radius-lg);
+
+  background: var(--color-success-bg);
+  padding: var(--spacing-4);
+
+  color: var(--color-success);
+}
+
+.collector-paid-state svg {
+  flex-shrink: 0;
+}
+
+.collector-paid-state p {
+  line-height: var(--line-height-normal);
+}
+
+
+/* =========================================================
+   13. PAYMENT HISTORY
+========================================================= */
+
+.collector-payment-history-row {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: var(--spacing-3);
+  padding: var(--spacing-3) var(--spacing-1);
+
+  transition:
+    background var(--transition-fast),
+    padding var(--transition-fast);
+}
+
+.collector-payment-history-row:hover {
+  border-radius: var(--radius-md);
+  background: var(--color-surface-hover);
+}
+
+.collector-payment-history-icon {
+  display: inline-flex;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid var(--color-success-border);
+  border-radius: var(--radius-full);
+
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.collector-payment-history-row > div {
+  min-width: 0;
+}
+
+.collector-payment-history-row > div p:first-child {
+  font-variant-numeric: tabular-nums;
+}
+
+
+/* =========================================================
+   14. RECEIPT MODAL CONTENT
+========================================================= */
+
+.collector-receipt-check {
+  display: inline-flex;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid var(--color-success-border);
+  border-radius: var(--radius-xl);
+
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.collector-receipt-amount {
+  position: relative;
+  overflow: hidden;
+  margin-block: var(--spacing-5);
+
+  border: 1px solid var(--color-success-border);
+  border-radius: var(--radius-xl);
+
+  background:
+    radial-gradient(
+      circle at 100% 0%,
+      color-mix(in srgb, var(--color-teal) 13%, transparent),
+      transparent 10rem
+    ),
+    var(--color-teal-light);
+
+  padding: var(--spacing-6);
+
+  color: var(--color-teal);
+  font-size: var(--text-3xl);
+  font-weight: var(--font-bold);
+  letter-spacing: -0.035em;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.collector-receipt-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.collector-receipt-details > div {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-3);
+
+  border-bottom: 1px solid var(--color-border);
+  padding-block: var(--spacing-3);
+}
+
+.collector-receipt-details > div:last-child {
+  border-bottom: none;
+}
+
+.collector-receipt-details span {
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+}
+
+.collector-receipt-details strong {
+  max-width: 60%;
+  overflow-wrap: anywhere;
+  color: var(--color-text);
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  text-align: right;
+}
+
+
+/* =========================================================
+   15. EMPTY STATES
+========================================================= */
+
+.collector-page .wp-empty-state {
+  color: var(--color-text-secondary);
+}
+
+
+/* =========================================================
+   16. RESPONSIVE DESIGN
+========================================================= */
+
+@media (max-width: 1024px) {
+  .collector-stat-card .wp-card-body {
+    padding: var(--spacing-4);
+  }
+}
+
+@media (max-width: 640px) {
+  .collector-online-indicator {
+    gap: var(--spacing-1);
+    padding: var(--spacing-2);
+  }
+
+  .collector-subscriber-row {
+    min-height: 82px;
+    gap: var(--spacing-2);
+    padding: var(--spacing-3);
+  }
+
+  .collector-account-balance {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .collector-payment-summary {
+    gap: var(--spacing-2);
+    padding: var(--spacing-3);
+  }
+
+  .collector-payment-history-row {
+    flex-wrap: wrap;
+  }
+
+  .collector-payment-history-row > button {
+    margin-left: auto;
+  }
+
+  .collector-receipt-amount {
+    padding: var(--spacing-5);
+    font-size: var(--text-2xl);
+  }
+
+  .collector-receipt-details > div {
+    gap: var(--spacing-2);
+  }
+}
+
+@media (max-width: 380px) {
+  .collector-payment-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .collector-payment-summary__balance {
+    grid-column: auto;
+  }
+
+  .collector-bill-row {
+    gap: var(--spacing-2);
+    padding: var(--spacing-2);
+  }
+}
+
+
+/* =========================================================
+   17. ACCESSIBILITY AND REDUCED MOTION
+========================================================= */
+
+.collector-subscriber-row:focus-visible,
+.collector-bill-row:focus-visible,
+.collector-filter-row button:focus-visible {
+  outline: 2px solid var(--color-blue);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .collector-page *,
+  .collector-page *::before,
+  .collector-page *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* =========================================================
+   ROUTE SELECTION
+========================================================= */
+
+.collector-route-card {
+  width: 100%;
+  min-width: 0;
+  padding: var(--spacing-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+  text-align: left;
+  transition:
+    border-color var(--transition-normal),
+    background var(--transition-normal),
+    box-shadow var(--transition-normal),
+    transform var(--transition-normal);
+}
+
+.collector-route-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-teal);
+  box-shadow: var(--shadow-md);
+}
+
+.collector-route-card--active {
+  border-color: var(--color-teal);
+  background: var(--color-teal-light);
+  box-shadow: 0 0 0 2px color-mix(
+    in srgb,
+    var(--color-teal) 10%,
+    transparent
+  );
+}
+
+.collector-route-card:focus-visible {
+  outline: 2px solid var(--color-blue);
+  outline-offset: 3px;
+}
+
+.collector-route-icon {
+  display: inline-flex;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-lg);
+  background: var(--color-blue-light);
+  color: var(--color-blue);
+}
+
+.collector-route-card--active .collector-route-icon {
+  background: var(--color-teal);
+  color: var(--color-text-inverse);
+}
+
+.collector-route-selected {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  border-radius: var(--radius-full);
+  background: var(--color-teal-light);
+  padding: var(--spacing-1) var(--spacing-2);
+  color: var(--color-teal);
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+}
+
+@media (max-width: 380px) {
+  .collector-route-card {
+    padding: var(--spacing-3);
+  }
+}
+/* =========================================================
+   18. RESPONSIVE LAYOUT — TABLET
+========================================================= */
+
+@media (max-width: 1024px) {
+  .collector-page main {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .collector-page main > * {
+    min-width: 0;
+  }
+
+  .collector-stat-card .wp-card-body {
+    padding: var(--spacing-4);
+  }
+
+  .collector-route-card {
+    padding: var(--spacing-3);
+  }
+
+  .collector-subscriber-row {
+    gap: var(--spacing-2);
+  }
+}
+
+
+/* =========================================================
+   19. RESPONSIVE LAYOUT — MOBILE
+========================================================= */
+
+@media (max-width: 768px) {
+  /* Prevent horizontal scrolling */
+  .collector-page {
+    width: 100%;
+    min-width: 0;
+    overflow-x: hidden;
+  }
+
+  .collector-page main {
+    width: 100%;
+    padding-inline: var(--spacing-3);
+  }
+
+  .collector-page main > section:first-child {
+    margin-bottom: var(--spacing-4);
+  }
+
+  /* Navbar */
+  .collector-page > header {
+    position: sticky;
+    top: 0;
+    padding-inline: var(--spacing-3);
+  }
+
+  .collector-page > header > div {
+    min-width: 0;
+    flex-wrap: wrap;
+    gap: var(--spacing-2);
+  }
+
+  /* Headings */
+  .collector-page main h2 {
+    font-size: clamp(1.35rem, 5vw, 1.75rem);
+    line-height: 1.25;
+  }
+
+  .collector-page main h3 {
+    overflow-wrap: anywhere;
+  }
+
+  /* Summary cards */
+  .collector-stat-card {
+    min-width: 0;
+  }
+
+  .collector-stat-card .wp-card-body {
+    padding: var(--spacing-3);
+  }
+
+  .collector-stat-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  /* Route cards */
+  .collector-route-card {
+    min-width: 0;
+    padding: var(--spacing-3);
+  }
+
+  .collector-route-card > div {
+    min-width: 0;
+  }
+
+  /* Search and filters */
+  .collector-filter-row {
+    width: 100%;
+  }
+
+  .collector-filter-row button {
+    min-height: 40px;
+  }
+
+  .collector-search {
+    min-width: 0;
+  }
+
+  /* Subscriber rows */
+  .collector-subscriber-row {
+    min-width: 0;
+    align-items: flex-start;
+    padding: var(--spacing-3);
+  }
+
+  .collector-subscriber-row > div {
+    min-width: 0;
+  }
+
+  .collector-subscriber-row > div:last-child {
+    max-width: 45%;
+    overflow-wrap: anywhere;
+  }
+
+  /* Account overview */
+  .collector-account-balance {
+    width: 100%;
+    min-width: 0;
+  }
+
+  /* Bill rows */
+  .collector-bill-row {
+    min-width: 0;
+    align-items: flex-start;
+  }
+
+  .collector-bill-row > div {
+    min-width: 0;
+  }
+
+  /* Payment form */
+  .collector-page input,
+  .collector-page select,
+  .collector-page textarea {
+    max-width: 100%;
+    font-size: 16px;
+  }
+
+  .collector-page form button {
+    min-height: 44px;
+  }
+
+  /* Payment history */
+  .collector-payment-history-row {
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+
+  .collector-payment-history-row > div {
+    flex: 1;
+  }
+
+  /* Receipt */
+  .collector-receipt-amount {
+    padding: var(--spacing-4);
+    font-size: var(--text-2xl);
+  }
+
+  .collector-receipt-details > div {
+    flex-wrap: wrap;
+  }
+}
+
+
+/* =========================================================
+   20. SMALL MOBILE SCREENS
+========================================================= */
+
+@media (max-width: 480px) {
+  .collector-page main {
+    padding-inline: var(--spacing-2);
+  }
+
+  /* Compact navbar */
+  .collector-page > header {
+    padding-inline: var(--spacing-2);
+  }
+
+  .collector-page > header > div {
+    gap: var(--spacing-2);
+  }
+
+  .collector-online-indicator {
+    padding: 6px 8px;
+    font-size: 11px;
+  }
+
+  /* Summary cards */
+  .collector-stat-card .wp-card-body {
+    padding: var(--spacing-3);
+  }
+
+  .collector-stat-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-md);
+  }
+
+  /* Route cards */
+  .collector-route-card {
+    padding: var(--spacing-3);
+  }
+
+  .collector-route-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  /* Subscriber list */
+  .collector-subscriber-row {
+    gap: var(--spacing-2);
+    padding: var(--spacing-3);
+  }
+
+  .collector-subscriber-row > div:last-child {
+    max-width: 42%;
+  }
+
+  .collector-subscriber-row .collector-account-balance {
+    min-width: 0;
+  }
+
+  /* Payment summary */
+  .collector-payment-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--spacing-2);
+    padding: var(--spacing-3);
+  }
+
+  /* Buttons and filters */
+  .collector-filter-row button {
+    flex: 1 1 auto;
+  }
+
+  /* Receipt */
+  .collector-receipt-details strong {
+    max-width: 55%;
+  }
+}
+
+
+/* =========================================================
+   21. EXTRA SMALL SCREENS
+========================================================= */
+
+@media (max-width: 380px) {
+  .collector-payment-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .collector-payment-summary__balance {
+    grid-column: auto;
+  }
+
+  .collector-subscriber-row {
+    flex-wrap: wrap;
+  }
+
+  .collector-subscriber-row > div:last-child {
+    width: 100%;
+    max-width: none;
+    align-items: flex-start;
+    padding-left: 48px;
+  }
+
+  .collector-bill-row {
+    gap: var(--spacing-2);
+    padding: var(--spacing-2);
+  }
+
+  .collector-receipt-amount {
+    font-size: var(--text-xl);
+  }
+}
+
+
+/* =========================================================
+   22. TOUCH AND ACCESSIBILITY
+========================================================= */
+
+@media (hover: none) {
+  .collector-stat-card:hover,
+  .collector-route-card:hover,
+  .collector-subscriber-row:hover,
+  .collector-bill-row:hover {
+    transform: none;
+  }
+}
+
+.collector-page button,
+.collector-page a,
+.collector-page input,
+.collector-page select {
+  touch-action: manipulation;
+}
+
+.collector-page button:focus-visible,
+.collector-page a:focus-visible {
+  outline: 2px solid var(--color-teal);
+  outline-offset: 3px;
+}
