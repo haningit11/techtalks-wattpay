@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { evaluateProtectedProxyRequest } from "@/src/server/auth/proxy";
+import { evaluateProtectedProxyRequest } from "@/server/auth/proxy";
 
 export async function proxy(request: NextRequest) {
   const decision = await evaluateProtectedProxyRequest(request.url);
