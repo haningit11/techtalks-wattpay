@@ -9,16 +9,12 @@ interface LogoutButtonProps {
 
 function SubmitLogoutButton({ className }: LogoutButtonProps) {
   const { pending } = useFormStatus();
+  const buttonClassName = className
+    ? `wp-button wp-button-secondary ${className}`
+    : "wp-button wp-button-secondary";
 
   return (
-    <button
-      type="submit"
-      disabled={pending}
-      className={
-        className ??
-        "rounded-lg border border-zinc-300 bg-white px-3.5 py-1.5 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-60"
-      }
-    >
+    <button type="submit" disabled={pending} className={buttonClassName}>
       {pending ? "Signing out..." : "Log out"}
     </button>
   );
