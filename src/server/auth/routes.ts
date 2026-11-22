@@ -1,4 +1,4 @@
-import type { UserRole } from "@/src/generated/prisma/enums";
+import type { UserRole } from "@/generated/prisma/enums";
 
 /** Home route assigned to each WattPay role (TDD Section 5.2, API-01). */
 export const ROLE_HOME_PAGES: Record<UserRole, string> = {

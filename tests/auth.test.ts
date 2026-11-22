@@ -1,19 +1,19 @@
 import bcrypt from "bcryptjs";
 import { decode, encode, getToken } from "next-auth/jwt";
 import { describe, expect, it, vi } from "vitest";
-import type { UserRole } from "@/src/generated/prisma/enums";
+import type { UserRole } from "@/generated/prisma/enums";
 import {
   authorizeCredentials,
   loginSchema,
   SESSION_MAX_AGE_SECONDS,
   type StoredAuthUser,
-} from "@/src/server/auth/credentials";
+} from "@/server/auth/credentials";
 import {
   evaluateProtectedProxyRequest,
   NO_STORE_CACHE_CONTROL,
-} from "@/src/server/auth/proxy";
-import { logoutAction } from "@/src/server/auth/actions";
-import { getRoleHomePage } from "@/src/server/auth/routes";
+} from "@/server/auth/proxy";
+import { logoutAction } from "@/server/auth/actions";
+import { getRoleHomePage } from "@/server/auth/routes";
 
 const { mockSignOut } = vi.hoisted(() => ({
   mockSignOut: vi.fn(async () => undefined),
@@ -26,7 +26,7 @@ vi.mock("next-auth", () => ({
   CredentialsSignin: class MockCredentialsSignin extends Error {},
 }));
 
-vi.mock("@/src/auth", () => ({
+vi.mock("@/auth", () => ({
   signIn: vi.fn(),
   signOut: mockSignOut,
 }));
