@@ -52,7 +52,7 @@ export async function loginAction(
     if (error instanceof CredentialsSignin) {
       return {
         email: rawEmail,
-        error: "Invalid email or password.",
+        error: "Invalid email or password. If your account is inactive, contact your administrator.",
       };
     }
 
@@ -60,7 +60,7 @@ export async function loginAction(
       if (error.type === "CredentialsSignin") {
         return {
           email: rawEmail,
-          error: "Invalid email or password.",
+          error: "Invalid email or password. If your account is inactive, contact your administrator.",
         };
       }
 

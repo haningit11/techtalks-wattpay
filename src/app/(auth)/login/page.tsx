@@ -1,7 +1,8 @@
 
 "use client";
 
-import { useState } from "react";
+import { useActionState, useState } from "react";
+import { loginAction } from "@/server/auth/actions";
 import Link from "next/link";
 import {
   Zap,
@@ -16,6 +17,7 @@ import IconButton from "@/ui/components/actions/IconButton";
 import "@/styles/login.css";
 
 export default function LoginPage() {
+  const [loginState, formAction, pending] = useActionState(loginAction, {});
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
@@ -91,7 +93,7 @@ export default function LoginPage() {
           {/* Login form */}
           <form
             className="login-form"
-            onSubmit={(event) => event.preventDefault()}
+            action={formAction}
           >
 
             {/* Email */}
@@ -102,6 +104,8 @@ export default function LoginPage() {
     name="email"
     label="Email address"
     type="email"
+    defaultValue={loginState.email}
+    error={loginState.fieldErrors?.email}
     autoComplete="email"
     placeholder="Enter your email"
     required
@@ -129,6 +133,7 @@ export default function LoginPage() {
     id="password"
     name="password"
     type={showPassword ? "text" : "password"}
+    error={loginState.fieldErrors?.password}
     autoComplete="current-password"
     placeholder="Enter your password"
     required
@@ -168,9 +173,12 @@ export default function LoginPage() {
               </label>
             </div>
 
+            {loginState.error && <p role="alert">{loginState.error}</p>}
+
             {/* Submit button */}
             <Button
               type="submit"
+              disabled={pending}
               variant="primary"
               size="lg"
               fullWidth
@@ -183,7 +191,7 @@ export default function LoginPage() {
               }
               className="login-submit"
             >
-              Sign in
+              {pending ? "Signing in..." : "Sign in"}
             </Button>
 
           </form>

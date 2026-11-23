@@ -12,7 +12,9 @@ import {
   evaluateProtectedProxyRequest,
   NO_STORE_CACHE_CONTROL,
 } from "@/server/auth/proxy";
-import { logoutAction } from "@/server/auth/actions";
+import { loginAction, logoutAction } from "@/server/auth/actions";
+import { AuthError, CredentialsSignin } from "next-auth";
+import { signIn } from "@/auth";
 import { getRoleHomePage } from "@/server/auth/routes";
 
 const { mockSignOut } = vi.hoisted(() => ({
@@ -240,5 +242,38 @@ describe("Sign-out and cache-control behavior (SCRUM-39, TDD API-02 / T-12)", ()
 
     expect(mockSignOut).toHaveBeenCalledTimes(1);
     expect(mockSignOut).toHaveBeenCalledWith({ redirectTo: "/login" });
+  });
+});
+
+
+describe("Login action messages", () => {
+  function form(email: string, password: string) {
+    const data = new FormData();
+    data.set("email", email);
+    data.set("password", password);
+    return data;
+  }
+
+  it("reports empty and malformed fields without attempting sign-in", async () => {
+    vi.mocked(signIn).mockClear();
+    const empty = await loginAction({}, form("", ""));
+    expect(empty.fieldErrors?.email).toBeTruthy();
+    expect(empty.fieldErrors?.password).toBeTruthy();
+    const invalid = await loginAction({}, form("invalid", "password"));
+    expect(invalid.fieldErrors?.email).toBeTruthy();
+    expect(signIn).not.toHaveBeenCalled();
+  });
+
+  it("returns a safe message for invalid or inactive credentials", async () => {
+    vi.mocked(signIn).mockRejectedValueOnce(new CredentialsSignin());
+    const result = await loginAction({}, form("user@example.com", "password"));
+    expect(result.error).toContain("Invalid email or password");
+    expect(result.error).toContain("inactive");
+  });
+
+  it("returns a friendly message for authentication service failures", async () => {
+    vi.mocked(signIn).mockRejectedValueOnce(new AuthError());
+    const result = await loginAction({}, form("user@example.com", "password"));
+    expect(result.error).toBe("Sign-in is temporarily unavailable. Please try again.");
   });
 });
