@@ -215,7 +215,7 @@ model Tariff {
   ratePerKwh Decimal  @db.Decimal(12, 4)
   fixedFee   Decimal  @db.Decimal(12, 2)
   currency   String   @db.VarChar(3)
-  amperage   Decimal? @db.Decimal(6, 2)
+  amperage   Decimal  @db.Decimal(6, 2)
 
   isActive Boolean @default(true)
 
@@ -228,6 +228,7 @@ model Tariff {
   bills Bill[]
 
   @@unique([billingMonth, name])
+  @@unique([billingMonth, amperage])
   @@index([billingMonth, isActive])
 }
 
