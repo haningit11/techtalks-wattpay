@@ -81,6 +81,7 @@ const ids = {
   ],
 
   tariff: "60000000-0000-4000-8000-000000000001",
+  tariff10A: "60000000-0000-4000-8000-000000000002",
 
   assignments: [
     "70000000-0000-4000-8000-000000000001",
@@ -317,7 +318,7 @@ async function main() {
   }
 
   // ==============================================
-  // 8. CREATE NOVEMBER TARIFF
+  // 8. CREATE NOVEMBER TARIFFS
   // ==============================================
 
   const november = new Date("2026-11-01T00:00:00.000Z");
@@ -332,7 +333,23 @@ async function main() {
       ratePerKwh: "0.4500",
       fixedFee: "10.00",
       currency: "USD",
-      amperage: null,
+      amperage: "5.00",
+      isActive: true,
+      createdByUserId: ids.operator,
+    },
+  });
+
+  await prisma.tariff.upsert({
+    where: { id: ids.tariff10A },
+    update: {},
+    create: {
+      id: ids.tariff10A,
+      name: "10A November 2026",
+      billingMonth: november,
+      ratePerKwh: "0.5000",
+      fixedFee: "15.00",
+      currency: "USD",
+      amperage: "10.00",
       isActive: true,
       createdByUserId: ids.operator,
     },
@@ -352,7 +369,7 @@ async function main() {
   console.log("- 5 subscribers");
   console.log("- 5 electricity subscriptions");
   console.log("- 5 October baseline readings");
-  console.log("- 1 November tariff");
+  console.log("- 2 November tariffs (5A and 10A)");
 
   console.log("\nNo November bills or payments were created.");
 }
