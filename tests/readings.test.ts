@@ -20,6 +20,8 @@ import {
 const { mockAuth, mockPrisma } = vi.hoisted(() => ({
   mockAuth: vi.fn(),
   mockPrisma: {
+    $transaction: vi.fn(),
+    $queryRaw: vi.fn(),
     subscription: {
       findUnique: vi.fn(),
     },
@@ -108,7 +110,9 @@ function makeReadingWithContext(
 }
 
 function createMockRepository(overrides: Partial<ReadingRepository> = {}): ReadingRepository {
-  return {
+  const repository: ReadingRepository = {
+    withSubscriptionLock: vi.fn(async (_id, work) => work(repository)),
+    findLaterReading: vi.fn(async () => null),
     findSubscriptionWithRoute: vi.fn(async () => ({
       id: IDS.subscription1,
       status: SubscriptionStatus.ACTIVE,
@@ -147,10 +151,14 @@ function createMockRepository(overrides: Partial<ReadingRepository> = {}): Readi
     findReaderRoutesWithActiveSubscriptions: vi.fn(async () => []),
     ...overrides,
   };
+  return repository;
 }
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mockPrisma.$transaction.mockImplementation(async (work) => work(mockPrisma));
+  mockPrisma.$queryRaw.mockResolvedValue([{ id: IDS.subscription1 }]);
+  mockPrisma.meterReading.findFirst.mockResolvedValue(null);
 });
 
 describe("Meter reading submission service (SCRUM-77 / SCRUM-82)", () => {
@@ -231,6 +239,120 @@ describe("Meter reading submission service (SCRUM-77 / SCRUM-82)", () => {
     expect(result.previousReadingValue?.toString()).toBe("950");
     expect(result.consumptionKwh?.toString()).toBe("100");
     expect(result.status).toBe(ReadingStatus.ACCEPTED);
+  });
+
+  it("rejects a later existing reading and prioritizes duplicates", async () => {
+    const repository = createMockRepository({ findLaterReading: vi.fn(async () => ({ id: IDS.reading1 })) });
+    const payload = { subscriptionId: IDS.subscription1, billingMonth: "2026-11", submittedValue: 1350 };
+    await expect(submitMeterReading(USERS.reader, payload, { repository })).rejects.toMatchObject({ reason: "OUT_OF_ORDER_READING" });
+    expect(repository.createMeterReading).not.toHaveBeenCalled();
+    expect(repository.findLatestPriorReading).not.toHaveBeenCalled();
+    const duplicate = createMockRepository({
+      findReadingForMonth: vi.fn(async () => ({ id: IDS.reading1 })),
+      findLaterReading: vi.fn(async () => ({ id: IDS.reading1 })),
+    });
+    await expect(submitMeterReading(USERS.reader, payload, { repository: duplicate })).rejects.toMatchObject({ reason: "DUPLICATE_MONTH" });
+    expect(duplicate.findLaterReading).not.toHaveBeenCalled();
+  });
+
+  it("uses the repository supplied by the subscription lock", async () => {
+    const transactionRepo = createMockRepository();
+    const outer = createMockRepository({ withSubscriptionLock: vi.fn(async (_id, work) => work(transactionRepo)) });
+    await submitMeterReading(USERS.reader, { subscriptionId: IDS.subscription1, billingMonth: "2026-11", submittedValue: 1350 }, { repository: outer });
+    expect(outer.withSubscriptionLock).toHaveBeenCalledWith(IDS.subscription1, expect.any(Function));
+    expect(outer.findReadingForMonth).not.toHaveBeenCalled();
+    expect(transactionRepo.findReadingForMonth).toHaveBeenCalled();
+    expect(transactionRepo.findLaterReading).toHaveBeenCalled();
+    expect(transactionRepo.findLatestPriorReading).toHaveBeenCalled();
+    expect(transactionRepo.createMeterReading).toHaveBeenCalled();
+  });
+
+  it("serializes competing months in a controlled repository mock", async () => {
+    let tail = Promise.resolve();
+    let laterExists = false;
+    const repository = createMockRepository({
+      withSubscriptionLock: vi.fn(async (_id, work) => {
+        const previous = tail;
+        let release!: () => void;
+        tail = new Promise<void>((resolve) => { release = resolve; });
+        await previous;
+        try { return await work(repository); } finally { release(); }
+      }),
+      findLaterReading: vi.fn(async () => laterExists ? { id: IDS.reading1 } : null),
+      createMeterReading: vi.fn(async (data) => {
+        laterExists = true;
+        return makeReadingRecord({ billingMonth: data.billingMonth });
+      }),
+    });
+    const december = submitMeterReading(USERS.reader, { subscriptionId: IDS.subscription1, billingMonth: "2026-12", submittedValue: 1350 }, { repository });
+    const november = submitMeterReading(USERS.reader, { subscriptionId: IDS.subscription1, billingMonth: "2026-11", submittedValue: 1300 }, { repository });
+    const [first, second] = await Promise.allSettled([december, november]);
+    expect(first.status).toBe("fulfilled");
+    expect(second.status).toBe("rejected");
+    if (second.status === "rejected") expect(second.reason).toMatchObject({ reason: "OUT_OF_ORDER_READING" });
+    expect(repository.createMeterReading).toHaveBeenCalledTimes(1);
+  });
+
+  it("uses November as the prior reading when concurrent submissions acquire the lock in order", async () => {
+    const history: MeterReading[] = [makeReadingRecord({
+      id: "50000000-0000-4000-8000-000000000000",
+      billingMonth: new Date("2026-10-01T00:00:00.000Z"),
+      previousReadingValue: null,
+      submittedValue: new Prisma.Decimal("1000"),
+      approvedValue: new Prisma.Decimal("1000"),
+      consumptionKwh: null,
+      status: ReadingStatus.BASELINE,
+    })];
+    let tail = Promise.resolve();
+    let releaseFirst!: () => void;
+    const secondQueued = new Promise<void>((resolve) => { releaseFirst = resolve; });
+    let lockRequests = 0;
+    const repository = createMockRepository({
+      withSubscriptionLock: vi.fn(async (_id, work) => {
+        const previous = tail;
+        let release!: () => void;
+        tail = new Promise<void>((resolve) => { release = resolve; });
+        const request = ++lockRequests;
+        if (request === 2) releaseFirst();
+        await previous;
+        try {
+          if (request === 1) await secondQueued;
+          return await work(repository);
+        } finally {
+          release();
+        }
+      }),
+      findReadingForMonth: vi.fn(async (_id, month) =>
+        history.find((reading) => reading.billingMonth.getTime() === month.getTime()) ?? null,
+      ),
+      findLaterReading: vi.fn(async (_id, month) =>
+        history.find((reading) => reading.billingMonth > month) ?? null,
+      ),
+      findLatestPriorReading: vi.fn(async (_id, month) =>
+        history.filter((reading) => reading.billingMonth < month)
+          .sort((a, b) => b.billingMonth.getTime() - a.billingMonth.getTime())[0] ?? null,
+      ),
+      createMeterReading: vi.fn(async (data) => {
+        const reading = makeReadingRecord({ ...data, id: `reading-${history.length}` });
+        history.push(reading);
+        return reading;
+      }),
+    });
+
+    const november = submitMeterReading(USERS.reader, {
+      subscriptionId: IDS.subscription1, billingMonth: "2026-11", submittedValue: 1200,
+    }, { repository });
+    const december = submitMeterReading(USERS.reader, {
+      subscriptionId: IDS.subscription1, billingMonth: "2026-12", submittedValue: 1400,
+    }, { repository });
+    const [novemberReading, decemberReading] = await Promise.all([november, december]);
+
+    expect(novemberReading.status).toBe(ReadingStatus.ACCEPTED);
+    expect(novemberReading.consumptionKwh?.toString()).toBe("200");
+    expect(decemberReading.status).toBe(ReadingStatus.ACCEPTED);
+    expect(decemberReading.previousReadingValue?.toString()).toBe("1200");
+    expect(decemberReading.consumptionKwh?.toString()).toBe("200");
+    expect(history).toHaveLength(3);
   });
 
   it("prevents duplicate monthly submissions via upfront check and Prisma P2002 fallback", async () => {
@@ -617,7 +739,7 @@ describe("Meter reading API route handlers (SCRUM-80 / SCRUM-82)", () => {
     });
     mockPrisma.userRouteAssignment.findMany.mockResolvedValueOnce([{ routeId: IDS.routeA }]);
     mockPrisma.meterReading.findUnique.mockResolvedValueOnce(null);
-    mockPrisma.meterReading.findFirst.mockResolvedValueOnce({
+    mockPrisma.meterReading.findFirst.mockResolvedValueOnce(null).mockResolvedValueOnce({
       id: "50000000-0000-4000-8000-000000000000",
       billingMonth: new Date("2026-10-01T00:00:00.000Z"),
       status: ReadingStatus.BASELINE,
@@ -680,6 +802,20 @@ describe("Meter reading API route handlers (SCRUM-80 / SCRUM-82)", () => {
     expect(duplicateJson.success).toBe(false);
     expect(duplicateJson.error.code).toBe("READING_CONFLICT");
     expect(duplicateJson.error.reason).toBe("DUPLICATE_MONTH");
+  });
+
+  it("returns 409 for an out-of-order submission", async () => {
+    mockAuth.mockResolvedValueOnce({ user: USERS.reader });
+    mockPrisma.subscription.findUnique.mockResolvedValueOnce({ id: IDS.subscription1, status: SubscriptionStatus.ACTIVE, subscriber: { id: IDS.subscriber1, isActive: true, routeId: IDS.routeA, route: { id: IDS.routeA, isActive: true } } });
+    mockPrisma.userRouteAssignment.findMany.mockResolvedValueOnce([{ routeId: IDS.routeA }]);
+    mockPrisma.meterReading.findUnique.mockResolvedValueOnce(null);
+    mockPrisma.meterReading.findFirst.mockResolvedValueOnce({ id: IDS.reading1 });
+    const response = await postReadingHandler(new Request("http://localhost/api/readings", { method: "POST", body: JSON.stringify({ subscriptionId: IDS.subscription1, billingMonth: "2026-11", submittedValue: 1350 }) }));
+    expect(response.status).toBe(409);
+    expect(await response.json()).toMatchObject({ error: { code: "READING_CONFLICT", reason: "OUT_OF_ORDER_READING" } });
+    expect(mockPrisma.meterReading.create).not.toHaveBeenCalled();
+    expect(mockPrisma.$transaction).toHaveBeenCalledWith(expect.any(Function), { isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted });
+    expect(mockPrisma.$queryRaw).toHaveBeenCalled();
   });
 
   it("GET /api/readings returns 200 for scoped history and 400/401/403 on bad or unauthorized requests", async () => {
