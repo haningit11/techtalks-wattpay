@@ -44,7 +44,7 @@ export class ReadingNotFoundError extends Error {
 export class ReadingConflictError extends Error {
   constructor(
     message: string,
-    readonly reason: "DUPLICATE_MONTH" | "UNRESOLVED_PRIOR_READING" = "DUPLICATE_MONTH",
+    readonly reason: "DUPLICATE_MONTH" | "UNRESOLVED_PRIOR_READING" | "OUT_OF_ORDER_READING" = "DUPLICATE_MONTH",
   ) {
     super(message);
     this.name = "ReadingConflictError";
@@ -184,6 +184,8 @@ export interface CreateMeterReadingRecordInput {
 }
 
 export interface ReadingRepository {
+  withSubscriptionLock<T>(subscriptionId: string, work: (repository: ReadingRepository) => Promise<T>): Promise<T>;
+  findLaterReading(subscriptionId: string, billingMonth: Date): Promise<{ id: string } | null>;
   findSubscriptionWithRoute(subscriptionId: string): Promise<SubscriptionWithRoute | null>;
   findActiveAssignedRouteIds(userId: string): Promise<string[]>;
   findReadingForMonth(subscriptionId: string, billingMonth: Date): Promise<{ id: string } | null>;
@@ -220,151 +222,167 @@ const READING_WITH_CONTEXT_INCLUDE = {
   },
 } as const;
 
-const prismaReadingRepository: ReadingRepository = {
-  findSubscriptionWithRoute(subscriptionId) {
-    return prisma.subscription.findUnique({
-      where: { id: subscriptionId },
-      select: {
-        id: true,
-        status: true,
-        subscriber: {
-          select: {
-            id: true,
-            isActive: true,
-            routeId: true,
-            route: {
-              select: {
-                id: true,
-                isActive: true,
+function makePrismaReadingRepository(client: Prisma.TransactionClient): ReadingRepository {
+  return {
+    withSubscriptionLock(subscriptionId, work) {
+      return prisma.$transaction(async (tx) => {
+        const rows = await tx.$queryRaw<{ id: string }[]>`SELECT "id" FROM "Subscription" WHERE "id" = ${subscriptionId}::uuid FOR UPDATE`;
+        if (rows.length === 0) throw new ReadingNotFoundError("Subscription not found.");
+        return work(makePrismaReadingRepository(tx));
+      }, { isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted });
+    },
+
+    findLaterReading(subscriptionId, billingMonth) {
+      return client.meterReading.findFirst({
+        where: { subscriptionId, billingMonth: { gt: billingMonth } },
+        select: { id: true },
+      });
+    },
+    findSubscriptionWithRoute(subscriptionId) {
+      return client.subscription.findUnique({
+        where: { id: subscriptionId },
+        select: {
+          id: true,
+          status: true,
+          subscriber: {
+            select: {
+              id: true,
+              isActive: true,
+              routeId: true,
+              route: {
+                select: {
+                  id: true,
+                  isActive: true,
+                },
               },
             },
           },
         },
-      },
-    });
-  },
+      });
+    },
 
-  async findActiveAssignedRouteIds(userId) {
-    const assignments = await prisma.userRouteAssignment.findMany({
-      where: {
-        userId,
-        isActive: true,
-        route: { isActive: true },
-      },
-      select: { routeId: true },
-    });
-    return assignments.map((assignment) => assignment.routeId);
-  },
-
-  findReadingForMonth(subscriptionId, billingMonth) {
-    return prisma.meterReading.findUnique({
-      where: {
-        subscriptionId_billingMonth: {
-          subscriptionId,
-          billingMonth,
+    async findActiveAssignedRouteIds(userId) {
+      const assignments = await client.userRouteAssignment.findMany({
+        where: {
+          userId,
+          isActive: true,
+          route: { isActive: true },
         },
-      },
-      select: { id: true },
-    });
-  },
+        select: { routeId: true },
+      });
+      return assignments.map((assignment) => assignment.routeId);
+    },
 
-  findLatestPriorReading(subscriptionId, billingMonth) {
-    return prisma.meterReading.findFirst({
-      where: {
-        subscriptionId,
-        billingMonth: { lt: billingMonth },
-      },
-      orderBy: { billingMonth: "desc" },
-      select: {
-        id: true,
-        billingMonth: true,
-        status: true,
-        submittedValue: true,
-        approvedValue: true,
-        consumptionKwh: true,
-      },
-    });
-  },
+    findReadingForMonth(subscriptionId, billingMonth) {
+      return client.meterReading.findUnique({
+        where: {
+          subscriptionId_billingMonth: {
+            subscriptionId,
+            billingMonth,
+          },
+        },
+        select: { id: true },
+      });
+    },
 
-  createMeterReading(data) {
-    return prisma.meterReading.create({ data });
-  },
+    findLatestPriorReading(subscriptionId, billingMonth) {
+      return client.meterReading.findFirst({
+        where: {
+          subscriptionId,
+          billingMonth: { lt: billingMonth },
+        },
+        orderBy: { billingMonth: "desc" },
+        select: {
+          id: true,
+          billingMonth: true,
+          status: true,
+          submittedValue: true,
+          approvedValue: true,
+          consumptionKwh: true,
+        },
+      });
+    },
 
-  findReadings(criteria) {
-    const subscriberFilter: Prisma.SubscriberWhereInput = {};
-    if (criteria.routeIds !== undefined) {
-      subscriberFilter.routeId = { in: criteria.routeIds };
-    }
-    if (criteria.ownerUserId !== undefined) {
-      subscriberFilter.userId = criteria.ownerUserId;
-    }
+    createMeterReading(data) {
+      return client.meterReading.create({ data });
+    },
 
-    const where: Prisma.MeterReadingWhereInput = {
-      ...(criteria.subscriptionId !== undefined ? { subscriptionId: criteria.subscriptionId } : {}),
-      ...(criteria.billingMonth !== undefined ? { billingMonth: criteria.billingMonth } : {}),
-      ...(criteria.status !== undefined ? { status: criteria.status } : {}),
-      ...(Object.keys(subscriberFilter).length > 0
-        ? { subscription: { subscriber: subscriberFilter } }
-        : {}),
-    };
+    findReadings(criteria) {
+      const subscriberFilter: Prisma.SubscriberWhereInput = {};
+      if (criteria.routeIds !== undefined) {
+        subscriberFilter.routeId = { in: criteria.routeIds };
+      }
+      if (criteria.ownerUserId !== undefined) {
+        subscriberFilter.userId = criteria.ownerUserId;
+      }
 
-    return prisma.meterReading.findMany({
-      where,
-      include: READING_WITH_CONTEXT_INCLUDE,
-      orderBy: [{ billingMonth: "desc" }, { createdAt: "desc" }],
-    });
-  },
+      const where: Prisma.MeterReadingWhereInput = {
+        ...(criteria.subscriptionId !== undefined ? { subscriptionId: criteria.subscriptionId } : {}),
+        ...(criteria.billingMonth !== undefined ? { billingMonth: criteria.billingMonth } : {}),
+        ...(criteria.status !== undefined ? { status: criteria.status } : {}),
+        ...(Object.keys(subscriberFilter).length > 0
+          ? { subscription: { subscriber: subscriberFilter } }
+          : {}),
+      };
 
-  findReadingById(id) {
-    return prisma.meterReading.findUnique({
-      where: { id },
-      include: READING_WITH_CONTEXT_INCLUDE,
-    });
-  },
+      return client.meterReading.findMany({
+        where,
+        include: READING_WITH_CONTEXT_INCLUDE,
+        orderBy: [{ billingMonth: "desc" }, { createdAt: "desc" }],
+      });
+    },
 
-  findReaderRoutesWithActiveSubscriptions(userId) {
-    return prisma.userRouteAssignment.findMany({
-      where: {
-        userId,
-        isActive: true,
-        route: { isActive: true },
-      },
-      orderBy: { route: { name: "asc" } },
-      select: {
-        route: {
-          select: {
-            id: true,
-            name: true,
-            description: true,
-            subscribers: {
-              where: { isActive: true },
-              orderBy: { fullName: "asc" },
-              select: {
-                id: true,
-                fullName: true,
-                address: true,
-                building: { select: { id: true, name: true } },
-                subscriptions: {
-                  where: { status: SubscriptionStatus.ACTIVE },
-                  orderBy: { createdAt: "desc" },
-                  select: {
-                    id: true,
-                    amperage: true,
-                    status: true,
-                    meterReadings: {
-                      orderBy: { billingMonth: "desc" },
-                      take: 12,
-                      select: {
-                        id: true,
-                        billingMonth: true,
-                        previousReadingValue: true,
-                        submittedValue: true,
-                        approvedValue: true,
-                        consumptionKwh: true,
-                        status: true,
-                        flagReason: true,
-                        reviewNote: true,
-                        createdAt: true,
+    findReadingById(id) {
+      return client.meterReading.findUnique({
+        where: { id },
+        include: READING_WITH_CONTEXT_INCLUDE,
+      });
+    },
+
+    findReaderRoutesWithActiveSubscriptions(userId) {
+      return client.userRouteAssignment.findMany({
+        where: {
+          userId,
+          isActive: true,
+          route: { isActive: true },
+        },
+        orderBy: { route: { name: "asc" } },
+        select: {
+          route: {
+            select: {
+              id: true,
+              name: true,
+              description: true,
+              subscribers: {
+                where: { isActive: true },
+                orderBy: { fullName: "asc" },
+                select: {
+                  id: true,
+                  fullName: true,
+                  address: true,
+                  building: { select: { id: true, name: true } },
+                  subscriptions: {
+                    where: { status: SubscriptionStatus.ACTIVE },
+                    orderBy: { createdAt: "desc" },
+                    select: {
+                      id: true,
+                      amperage: true,
+                      status: true,
+                      meterReadings: {
+                        orderBy: { billingMonth: "desc" },
+                        take: 12,
+                        select: {
+                          id: true,
+                          billingMonth: true,
+                          previousReadingValue: true,
+                          submittedValue: true,
+                          approvedValue: true,
+                          consumptionKwh: true,
+                          status: true,
+                          flagReason: true,
+                          reviewNote: true,
+                          createdAt: true,
+                        },
                       },
                     },
                   },
@@ -373,10 +391,12 @@ const prismaReadingRepository: ReadingRepository = {
             },
           },
         },
-      },
-    });
-  },
-};
+      });
+    },
+  };
+}
+
+const prismaReadingRepository = makePrismaReadingRepository(prisma);
 
 export interface EvaluateMeterReadingInput {
   submittedValue: Prisma.Decimal;
@@ -486,73 +506,83 @@ export async function submitMeterReading(
   const parsed = submitReadingSchema.parse(input);
   const repository = deps.repository ?? prismaReadingRepository;
 
-  const subscription = await repository.findSubscriptionWithRoute(parsed.subscriptionId);
-  if (!subscription) {
-    throw new ReadingNotFoundError("Subscription not found.");
-  }
-
-  const assignedRouteIds = await repository.findActiveAssignedRouteIds(reader.id);
-  requireRouteAccess(subscription.subscriber.routeId, assignedRouteIds);
-
-  if (!subscription.subscriber.route.isActive) {
-    throw new ReadingValidationError("Readings cannot be submitted on an inactive collection route.");
-  }
-
-  if (!subscription.subscriber.isActive) {
-    throw new ReadingValidationError("Readings cannot be submitted for an inactive subscriber.");
-  }
-
-  if (subscription.status !== SubscriptionStatus.ACTIVE) {
-    throw new ReadingValidationError("Readings can only be submitted for an active subscription.");
-  }
-
-  const existingReading = await repository.findReadingForMonth(
-    parsed.subscriptionId,
-    parsed.billingMonth,
-  );
-  if (existingReading) {
-    throw new ReadingConflictError(
-      "A meter reading already exists for this subscription and billing month.",
-      "DUPLICATE_MONTH",
-    );
-  }
-
-  const priorReading = await repository.findLatestPriorReading(
-    parsed.subscriptionId,
-    parsed.billingMonth,
-  );
-  if (!priorReading) {
-    throw new ReadingValidationError(
-      "No previous cumulative reading exists for this subscription before the selected billing month.",
-    );
-  }
-
-  if (priorReading.status === ReadingStatus.FLAGGED) {
-    throw new ReadingConflictError(
-      "The previous reading for this subscription is still flagged and must be reviewed before submitting a new month.",
-      "UNRESOLVED_PRIOR_READING",
-    );
-  }
-
-  const previousReadingValue = getEffectiveReadingValue(priorReading);
-  const evaluation = evaluateMeterReading({
-    submittedValue: parsed.submittedValue,
-    previousReadingValue,
-    previousConsumptionKwh: priorReading.consumptionKwh,
-    highConsumptionThresholdKwh: deps.highConsumptionThresholdKwh,
-  });
-
   try {
-    return await repository.createMeterReading({
-      subscriptionId: parsed.subscriptionId,
-      billingMonth: parsed.billingMonth,
-      previousReadingValue,
-      submittedValue: parsed.submittedValue,
-      approvedValue: null,
-      consumptionKwh: evaluation.consumptionKwh,
-      status: evaluation.status,
-      flagReason: evaluation.flagReason,
-      submittedByUserId: reader.id,
+    return await repository.withSubscriptionLock(parsed.subscriptionId, async (repository) => {
+      const subscription = await repository.findSubscriptionWithRoute(parsed.subscriptionId);
+      if (!subscription) {
+        throw new ReadingNotFoundError("Subscription not found.");
+      }
+
+      const assignedRouteIds = await repository.findActiveAssignedRouteIds(reader.id);
+      requireRouteAccess(subscription.subscriber.routeId, assignedRouteIds);
+
+      if (!subscription.subscriber.route.isActive) {
+        throw new ReadingValidationError("Readings cannot be submitted on an inactive collection route.");
+      }
+
+      if (!subscription.subscriber.isActive) {
+        throw new ReadingValidationError("Readings cannot be submitted for an inactive subscriber.");
+      }
+
+      if (subscription.status !== SubscriptionStatus.ACTIVE) {
+        throw new ReadingValidationError("Readings can only be submitted for an active subscription.");
+      }
+
+      const existingReading = await repository.findReadingForMonth(
+        parsed.subscriptionId,
+        parsed.billingMonth,
+      );
+      if (existingReading) {
+        throw new ReadingConflictError(
+          "A meter reading already exists for this subscription and billing month.",
+          "DUPLICATE_MONTH",
+        );
+      }
+
+      const laterReading = await repository.findLaterReading(parsed.subscriptionId, parsed.billingMonth);
+      if (laterReading) {
+        throw new ReadingConflictError(
+          "A later month's reading already exists for this subscription.",
+          "OUT_OF_ORDER_READING",
+        );
+      }
+
+      const priorReading = await repository.findLatestPriorReading(
+        parsed.subscriptionId,
+        parsed.billingMonth,
+      );
+      if (!priorReading) {
+        throw new ReadingValidationError(
+          "No previous cumulative reading exists for this subscription before the selected billing month.",
+        );
+      }
+
+      if (priorReading.status === ReadingStatus.FLAGGED) {
+        throw new ReadingConflictError(
+          "The previous reading for this subscription is still flagged and must be reviewed before submitting a new month.",
+          "UNRESOLVED_PRIOR_READING",
+        );
+      }
+
+      const previousReadingValue = getEffectiveReadingValue(priorReading);
+      const evaluation = evaluateMeterReading({
+        submittedValue: parsed.submittedValue,
+        previousReadingValue,
+        previousConsumptionKwh: priorReading.consumptionKwh,
+        highConsumptionThresholdKwh: deps.highConsumptionThresholdKwh,
+      });
+
+      return await repository.createMeterReading({
+        subscriptionId: parsed.subscriptionId,
+        billingMonth: parsed.billingMonth,
+        previousReadingValue,
+        submittedValue: parsed.submittedValue,
+        approvedValue: null,
+        consumptionKwh: evaluation.consumptionKwh,
+        status: evaluation.status,
+        flagReason: evaluation.flagReason,
+        submittedByUserId: reader.id,
+      });
     });
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
