@@ -57,6 +57,9 @@ function fail(status: number, code: string, message: string) {
 
 // Turns any error into the TDD error format: { success: false, error: { code, message } }
 export function handleApiError(error: unknown) {
+  if (isUniqueConstraintError(error)) {
+    return fail(409, "CONFLICT", "This record already exists.");
+  }
   if (error instanceof HttpError) return fail(error.status, error.code, error.message);
   if (error instanceof ZodError) {
     return fail(400, "VALIDATION_ERROR", error.issues[0]?.message ?? "Invalid input.");
@@ -67,4 +70,15 @@ export function handleApiError(error: unknown) {
   }
   console.error("[api] unexpected error", error); // details stay on the server
   return fail(500, "INTERNAL_ERROR", "Something went wrong. Please try again.");
+}
+
+// Prisma error P2002 = the database's unique rule rejected a duplicate.
+// Happens when two identical requests arrive at the same moment.
+function isUniqueConstraintError(error: unknown) {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code?: unknown }).code === "P2002"
+  );
 }

@@ -31,6 +31,8 @@ import {
   setAssignmentActive,
 } from "@/server/services/route.service";
 import { POST as createBuildingApi } from "@/app/api/buildings/route";
+import { POST as assignStaffApi } from "@/app/api/route-assignments/route";
+import { PATCH as updateAssignmentApi } from "@/app/api/route-assignments/[id]/route";
 
 /* ---------- Fake records ---------- */
 const OPERATOR_ID = "11111111-1111-4111-8111-111111111111";
@@ -247,5 +249,83 @@ describe("API authorization (subtask 1.3)", () => {
     prismaMock.building.create.mockResolvedValueOnce({ id: "b1", name: "Al-Nour" });
     const response = await createBuildingApi(newBuildingRequest());
     expect(response.status).toBe(201);
+  });
+});
+
+/* ---------- 5. Assignment API (review feedback) ---------- */
+describe("Assignment API", () => {
+  const COLLECTOR_ID = "66666666-6666-4666-8666-666666666666";
+
+  function signInAs(id: string, role: string) {
+    authMock.mockResolvedValueOnce({ user: { id } });
+    prismaMock.user.findUnique.mockResolvedValueOnce({ id, role, isActive: true });
+  }
+
+  const assignRequest = () =>
+    new Request("http://localhost/api/route-assignments", {
+      method: "POST",
+      body: JSON.stringify({ userId: READER_ID, routeId: ROUTE_ID }),
+    });
+
+  const patchRequest = (body: unknown) =>
+    new Request(`http://localhost/api/route-assignments/${ASSIGNMENT_ID}`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    });
+
+  it("returns 201 when an Operator assigns a Meter Reader", async () => {
+    signInAs(OPERATOR_ID, "OPERATOR");
+    prismaMock.user.findUnique.mockResolvedValueOnce(reader);
+    prismaMock.collectionRoute.findUnique.mockResolvedValueOnce(activeRoute);
+    prismaMock.userRouteAssignment.findUnique.mockResolvedValueOnce(null);
+    prismaMock.userRouteAssignment.create.mockResolvedValueOnce({ id: ASSIGNMENT_ID });
+
+    const response = await assignStaffApi(assignRequest());
+
+    expect(response.status).toBe(201);
+  });
+
+  it("returns 409 (not 500) when two identical requests race (Prisma P2002)", async () => {
+    signInAs(OPERATOR_ID, "OPERATOR");
+    prismaMock.user.findUnique.mockResolvedValueOnce(reader);
+    prismaMock.collectionRoute.findUnique.mockResolvedValueOnce(activeRoute);
+    prismaMock.userRouteAssignment.findUnique.mockResolvedValueOnce(null);
+    prismaMock.userRouteAssignment.create.mockRejectedValueOnce(
+      Object.assign(new Error("Unique constraint failed"), { code: "P2002" }),
+    );
+
+    const response = await assignStaffApi(assignRequest());
+
+    expect(response.status).toBe(409);
+    expect((await response.json()).error.code).toBe("CONFLICT");
+  });
+
+  it("returns 403 when a Payment Collector tries to assign staff", async () => {
+    signInAs(COLLECTOR_ID, "PAYMENT_COLLECTOR");
+    const response = await assignStaffApi(assignRequest());
+    expect(response.status).toBe(403);
+    expect(prismaMock.userRouteAssignment.create).not.toHaveBeenCalled();
+  });
+
+  it("returns 200 when an Operator deactivates an assignment", async () => {
+    signInAs(OPERATOR_ID, "OPERATOR");
+    prismaMock.userRouteAssignment.findUnique.mockResolvedValueOnce({ id: ASSIGNMENT_ID, isActive: true });
+    prismaMock.userRouteAssignment.update.mockResolvedValueOnce({ id: ASSIGNMENT_ID, isActive: false });
+
+    const response = await updateAssignmentApi(patchRequest({ isActive: false }), {
+      params: Promise.resolve({ id: ASSIGNMENT_ID }),
+    });
+
+    expect(response.status).toBe(200);
+    expect(prismaMock.auditLog.create).toHaveBeenCalled();
+  });
+
+  it("returns 400 for an invalid deactivation body", async () => {
+    signInAs(OPERATOR_ID, "OPERATOR");
+    const response = await updateAssignmentApi(patchRequest({ isActive: "no" }), {
+      params: Promise.resolve({ id: ASSIGNMENT_ID }),
+    });
+    expect(response.status).toBe(400);
+    expect(prismaMock.userRouteAssignment.update).not.toHaveBeenCalled();
   });
 });
