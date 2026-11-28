@@ -145,3 +145,12 @@ export async function getActiveRouteIdsForUser(userId: string) {
   });
   return rows.map((row) => row.routeId);
 }
+
+// Active staff that can be assigned to routes (for the assignment form)
+export function listAssignableStaff() {
+  return prisma.user.findMany({
+    where: { isActive: true, role: { in: [...ASSIGNABLE_ROLES] } },
+    select: { id: true, fullName: true, role: true },
+    orderBy: { fullName: "asc" },
+  });
+}
